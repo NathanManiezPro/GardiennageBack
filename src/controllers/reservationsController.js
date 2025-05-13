@@ -1,32 +1,64 @@
-let reservations = [];
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 module.exports = {
-  getAll: (_req, res) => res.json(reservations),
-
-  getById: (req, res) => {
-    const r = reservations.find(r => r.id == req.params.id);
-    if (!r) return res.status(404).json({ message: 'Réservation non trouvée' });
-    res.json(r);
+  getAll: async (_req, res) => {
+    try {
+      const reservations = await prisma.reservation.findMany();
+      res.json(reservations);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   },
 
-  create: (req, res) => {
-    const { voitureId, clientId, dateHeure } = req.body;
-    const newRes = { id: reservations.length + 1, voitureId, clientId, dateHeure };
-    reservations.push(newRes);
-    res.status(201).json(newRes);
+  getById: async (req, res) => {
+    try {
+      const reservation = await prisma.reservation.findUnique({
+        where: { id: parseInt(req.params.id) }
+      });
+      if (!reservation) return res.status(404).json({ message: 'Réservation non trouvée' });
+      res.json(reservation);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   },
 
-  update: (req, res) => {
-    const index = reservations.findIndex(r => r.id == req.params.id);
-    if (index === -1) return res.status(404).json({ message: 'Réservation non trouvée' });
-    reservations[index] = { ...reservations[index], ...req.body };
-    res.json(reservations[index]);
+  create: async (req, res) => {
+    try {
+      const { dateHeure, voitureId, clientId } = req.body;
+      const reservation = await prisma.reservation.create({
+        data: {
+          dateHeure: new Date(dateHeure),
+          voitureId: parseInt(voitureId),
+          clientId: parseInt(clientId)
+        }
+      });
+      res.status(201).json(reservation);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   },
 
-  remove: (req, res) => {
-    const index = reservations.findIndex(r => r.id == req.params.id);
-    if (index === -1) return res.status(404).json({ message: 'Réservation non trouvée' });
-    const removed = reservations.splice(index, 1);
-    res.json({ message: 'Réservation supprimée', removed });
+  update: async (req, res) => {
+    try {
+      const reservation = await prisma.reservation.update({
+        where: { id: parseInt(req.params.id) },
+        data: req.body
+      });
+      res.json(reservation);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+
+  delete: async (req, res) => {
+    try {
+      await prisma.reservation.delete({
+        where: { id: parseInt(req.params.id) }
+      });
+      res.json({ message: 'Réservation supprimée' });
+    } catch (err) {
+      res.status(404).json({ error: 'Réservation non trouvée' });
+    }
   }
 };
