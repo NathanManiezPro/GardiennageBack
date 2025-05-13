@@ -1,0 +1,464 @@
+openapi: 3.0.0
+info:
+  title: API Gardiennage Automobile
+  version: 1.0.0
+  description: Documentation détaillée de l'API, conforme au MCD
+
+paths:
+  /users/register:
+    post:
+      summary: Inscription d’un utilisateur
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, email, telephone, password]
+              properties:
+                nom:
+                  type: string
+                email:
+                  type: string
+                telephone:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: Utilisateur inscrit
+
+  /users/login:
+    post:
+      summary: Connexion d’un utilisateur
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Connexion réussie
+
+  /cars:
+    get:
+      summary: Liste toutes les voitures
+      tags: [Voitures]
+      responses:
+        '200':
+          description: Succès
+    post:
+      summary: Crée une voiture
+      tags: [Voitures]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [modele, plaqueImmatriculation, dateEntree, statut, clientId]
+              properties:
+                modele:
+                  type: string
+                plaqueImmatriculation:
+                  type: string
+                dateEntree:
+                  type: string
+                  format: date
+                statut:
+                  type: string
+                clientId:
+                  type: integer
+      responses:
+        '201':
+          description: Créée
+  /cars/{id}:
+    get:
+      summary: Détail d'une voiture
+      tags: [Voitures]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Voiture trouvée
+    put:
+      summary: Met à jour une voiture
+      tags: [Voitures]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                modele:
+                  type: string
+                statut:
+                  type: string
+      responses:
+        '200':
+          description: Mise à jour réussie
+    delete:
+      summary: Supprime une voiture
+      tags: [Voitures]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supprimée
+
+  /tickets:
+    get:
+      summary: Liste tous les tickets
+      tags: [Tickets]
+      responses:
+        '200':
+          description: Succès
+    post:
+      summary: Crée un ticket
+      tags: [Tickets]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, dateCreation, statut, voitureId]
+              properties:
+                type:
+                  type: string
+                dateCreation:
+                  type: string
+                  format: date
+                statut:
+                  type: string
+                voitureId:
+                  type: integer
+      responses:
+        '201':
+          description: Ticket créé
+  /tickets/{id}:
+    get:
+      summary: Détail d’un ticket
+      tags: [Tickets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Ticket trouvé
+    put:
+      summary: Met à jour un ticket
+      tags: [Tickets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statut:
+                  type: string
+      responses:
+        '200':
+          description: Mis à jour
+    delete:
+      summary: Supprime un ticket
+      tags: [Tickets]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supprimé
+
+  /abonnements:
+    get:
+      summary: Liste tous les abonnements
+      tags: [Abonnements]
+      responses:
+        '200':
+          description: Succès
+    post:
+      summary: Crée un abonnement
+      tags: [Abonnements]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dateDebut, dateFin, type, clientId]
+              properties:
+                dateDebut:
+                  type: string
+                  format: date
+                dateFin:
+                  type: string
+                  format: date
+                type:
+                  type: string
+                clientId:
+                  type: integer
+      responses:
+        '201':
+          description: Abonnement créé
+  /abonnements/{id}:
+    put:
+      summary: Met à jour un abonnement
+      tags: [Abonnements]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                dateFin:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Mis à jour
+    delete:
+      summary: Supprime un abonnement
+      tags: [Abonnements]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supprimé
+
+  /reservations:
+    get:
+      summary: Liste toutes les réservations
+      tags: [Reservations]
+      responses:
+        '200':
+          description: Succès
+    post:
+      summary: Crée une réservation
+      tags: [Reservations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dateHeure, voitureId, clientId]
+              properties:
+                dateHeure:
+                  type: string
+                  format: date-time
+                voitureId:
+                  type: integer
+                clientId:
+                  type: integer
+      responses:
+        '201':
+          description: Réservation créée
+  /reservations/{id}:
+    put:
+      summary: Met à jour une réservation
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dateHeure:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Mis à jour
+    delete:
+      summary: Supprime une réservation
+      tags: [Reservations]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supprimée
+
+  /notifications:
+    get:
+      summary: Liste toutes les notifications
+      tags: [Notifications]
+      responses:
+        '200':
+          description: Succès
+    post:
+      summary: Crée une notification
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message, dateTime, statutLecture, clientId]
+              properties:
+                message:
+                  type: string
+                dateTime:
+                  type: string
+                  format: date-time
+                statutLecture:
+                  type: boolean
+                clientId:
+                  type: integer
+      responses:
+        '201':
+          description: Notification créée
+  /notifications/{id}:
+    put:
+      summary: Met à jour une notification 
+      tags: [Notifications]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                statutLecture:
+                  type: boolean
+      responses:
+        '200':
+          description: Notification mise à jour
+    delete:
+      summary: Supprime une notification
+      tags: [Notifications]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supprimée
+
+  /history:
+    get:
+      summary: Liste tout l’historique des interventions
+      tags: [Historique]
+      responses:
+        '200':
+          description: Succès
+    post:
+      summary: Ajoute une intervention à l’historique
+      tags: [Historique]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dateIntervention, description, ticketId]
+              properties:
+                dateIntervention:
+                  type: string
+                  format: date
+                description:
+                  type: string
+                ticketId:
+                  type: integer
+      responses:
+        '201':
+          description: Intervention ajoutée
+  /history/{id}:
+    put:
+      summary: Met à jour une intervention
+      tags: [Historique]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Mis à jour
+    delete:
+      summary: Supprime une intervention
+      tags: [Historique]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Suppriméex
