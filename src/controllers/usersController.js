@@ -1,31 +1,38 @@
-// src/controllers/usersController.js
-
-let users = [];
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 module.exports = {
-  register: (req, res) => {
+  register: async (req, res) => {
     const { nom, email, telephone, password } = req.body;
-    if (!nom || !email || !password) {
-      return res.status(400).json({ message: 'Champs obligatoires manquants' });
+    try {
+      const user = await prisma.user.create({
+        data: { nom, email, telephone, password }
+      });
+      res.status(201).json({ message: 'Inscription réussie', user });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
     }
-    const existingUser = users.find(u => u.email === email);
-    if (existingUser) {
-      return res.status(409).json({ message: 'Email déjà utilisé' });
-    }
-    const newUser = { id: users.length + 1, nom, email, telephone, password };
-    users.push(newUser);
-    res.status(201).json({ message: 'Inscription réussie', user: newUser });
   },
 
-  login: (req, res) => {
+  login: async (req, res) => {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Champs obligatoires manquants' });
+    try {
+      const user = await prisma.user.findUnique({ where: { email } });
+      if (!user || user.password !== password) {
+        return res.status(401).json({ message: 'Identifiants invalides' });
+      }
+      res.json({ message: 'Connexion réussie', user });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-    const user = users.find(u => u.email === email && u.password === password);
-    if (!user) {
-      return res.status(401).json({ message: 'Identifiants incorrects' });
+  },
+
+  getAll: async (_req, res) => {
+    try {
+      const users = await prisma.user.findMany();
+      res.json(users);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
     }
-    res.json({ message: 'Connexion réussie', token: 'fake-jwt-token' });
   }
 };

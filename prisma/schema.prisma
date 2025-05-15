@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  nom       String
+  email     String   @unique
+  telephone String
+  password  String
+  cars      Car[]
+  abonnements Abonnement[]
+  reservations Reservation[]
+}
+
+model Car {
+  id                    Int      @id @default(autoincrement())
+  modele                String
+  plaqueImmatriculation String
+  dateEntree            DateTime
+  statut                String
+  clientId              Int
+  user                  User     @relation(fields: [clientId], references: [id])
+  tickets               Ticket[]
+  reservations          Reservation[]
+}
+
+model Ticket {
+  id         Int      @id @default(autoincrement())
+  type       String
+  dateCreation DateTime
+  statut     String
+  voitureId  Int
+  car        Car      @relation(fields: [voitureId], references: [id])
+}
+
+model Abonnement {
+  id        Int      @id @default(autoincrement())
+  dateDebut DateTime
+  dateFin   DateTime
+  type      String
+  clientId  Int
+  user      User     @relation(fields: [clientId], references: [id])
+}
+
+model Reservation {
+  id        Int      @id @default(autoincrement())
+  dateHeure DateTime
+  voitureId Int
+  clientId  Int
+  car       Car      @relation(fields: [voitureId], references: [id])
+  user      User     @relation(fields: [clientId], references: [id])
+}

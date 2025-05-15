@@ -1,32 +1,65 @@
-let subscriptions = [];
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
 
 module.exports = {
-  getAll: (_req, res) => res.json(subscriptions),
-
-  getById: (req, res) => {
-    const sub = subscriptions.find(s => s.id == req.params.id);
-    if (!sub) return res.status(404).json({ message: 'Abonnement non trouvé' });
-    res.json(sub);
+  getAll: async (_req, res) => {
+    try {
+      const abonnements = await prisma.abonnement.findMany();
+      res.json(abonnements);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   },
 
-  create: (req, res) => {
-    const { clientId, type, dateDebut, dateFin } = req.body;
-    const newSub = { id: subscriptions.length + 1, clientId, type, dateDebut, dateFin };
-    subscriptions.push(newSub);
-    res.status(201).json(newSub);
+  getById: async (req, res) => {
+    try {
+      const abonnement = await prisma.abonnement.findUnique({
+        where: { id: parseInt(req.params.id) }
+      });
+      if (!abonnement) return res.status(404).json({ message: 'Abonnement non trouvé' });
+      res.json(abonnement);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   },
 
-  update: (req, res) => {
-    const index = subscriptions.findIndex(s => s.id == req.params.id);
-    if (index === -1) return res.status(404).json({ message: 'Abonnement non trouvé' });
-    subscriptions[index] = { ...subscriptions[index], ...req.body };
-    res.json(subscriptions[index]);
+  create: async (req, res) => {
+    try {
+      const { dateDebut, dateFin, type, clientId } = req.body;
+      const abonnement = await prisma.abonnement.create({
+        data: {
+          dateDebut: new Date(dateDebut),
+          dateFin: new Date(dateFin),
+          type,
+          clientId: parseInt(clientId)
+        }
+      });
+      res.status(201).json(abonnement);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   },
 
-  remove: (req, res) => {
-    const index = subscriptions.findIndex(s => s.id == req.params.id);
-    if (index === -1) return res.status(404).json({ message: 'Abonnement non trouvé' });
-    const removed = subscriptions.splice(index, 1);
-    res.json({ message: 'Abonnement supprimé', removed });
+  update: async (req, res) => {
+    try {
+      const abonnement = await prisma.abonnement.update({
+        where: { id: parseInt(req.params.id) },
+        data: req.body
+      });
+      res.json(abonnement);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+
+  delete: async (req, res) => {
+    try {
+      await prisma.abonnement.delete({
+        where: { id: parseInt(req.params.id) }
+      });
+      res.json({ message: 'Abonnement supprimé' });
+    } catch (err) {
+      res.status(404).json({ error: 'Abonnement non trouvé' });
+    }
   }
 };
