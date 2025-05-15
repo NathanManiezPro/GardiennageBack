@@ -1,4 +1,3 @@
-
 # 🚗 API Gardiennage Automobile
 
 Application développée dans le cadre du titre professionnel **CDA 2025** (Concepteur Développeur d’Applications), permettant de gérer des voitures en gardiennage, des tickets de maintenance, des abonnements et plus encore.
@@ -12,23 +11,28 @@ Cette application permet de valider les blocs de compétences suivants :
 - ✅ Développer une application sécurisée
 - ✅ Concevoir et développer une application sécurisée organisée en couches
 - ✅ Préparer le déploiement d’une application sécurisée
-- ✅ Implémenter la persistance des données (MongoDB)
+- ✅ Implémenter la persistance des données (MongoDB + PostgreSQL)
 - ✅ Documenter une API REST (Swagger)
 
 ---
 
-## 🛠️ Technologies utilisées
+## ⚙️ Technologies utilisées
 
-| Technologie | Description                            |
-|-------------|----------------------------------------|
-| Node.js     | Environnement d’exécution JavaScript   |
-| Express.js  | Framework pour créer l’API REST        |
-| MongoDB     | Base de données NoSQL                  |
-| Mongoose    | ODM pour interagir avec MongoDB        |
-| Swagger     | Documentation de l’API avec `swagger.yaml` |
-| Dotenv      | Gestion des variables d’environnement   |
-| Git / GitHub| Gestion de version                     |
-| Postman     | Tests manuels de l’API                 |
+| Frontend  | Backend       | BDD SQL        | BDD NoSQL     | Auth / Tests      |
+|-----------|----------------|----------------|----------------|--------------------|
+| React.js  | Express.js     | PostgreSQL     | MongoDB        | Swagger / Cypress  |
+| JSX       | Node.js        | Prisma ORM     | Mongoose       | (à venir)          |
+| Tailwind  | Docker         |                |                |                    |
+
+---
+
+## 🧰 Dépendances installées
+
+```bash
+npm install express mongoose prisma @prisma/client dotenv
+npm install swagger-ui-express yaml
+npm install --save-dev nodemon
+```
 
 ---
 
@@ -47,31 +51,21 @@ cd backend-projet
 npm install
 ```
 
----
+### 3. Configurer l’environnement
 
-## 🧰 Dépendances principales installées
+Créer un fichier `.env` :
 
-```bash
-npm install express mongoose dotenv
+```env
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/garage
+DATABASE_URL="postgresql://admin:CarGarage_2025!@localhost:5432/garage?schema=public"
 ```
 
-### Dépendances pour la documentation Swagger
-
-```bash
-npm install swagger-ui-express yaml
-```
-
-### Dépendance de développement
-
-```bash
-npm install --save-dev nodemon
-```
+> Un fichier `env.example` est fourni pour t’aider.
 
 ---
 
 ## ⚙️ Scripts disponibles
-
-Dans `package.json` :
 
 ```json
 "scripts": {
@@ -82,38 +76,24 @@ Dans `package.json` :
 
 ---
 
-## 🧪 Lancer le projet en local
-
-1. Créer un fichier `.env` à la racine :
-
-```
-PORT=3000
-MONGO_URI=mongodb://localhost:27017/garage
-```
-
-2. Lancer l’API :
+## ▶️ Lancer le projet
 
 ```bash
-npm run dev
+docker compose up -d      # Lance PostgreSQL
+npx prisma generate       # Génère le client Prisma
+npm run dev               # Démarre le backend
 ```
 
-3. Accéder à l’API :
-- Base : [http://localhost:3000](http://localhost:3000)
-- Swagger : [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- [http://localhost:3000](http://localhost:3000)
+- [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 
 ---
 
 ## 📘 Documentation Swagger
 
-L’API est entièrement documentée via un fichier externe `swagger.yaml`.
+L’API est entièrement documentée via un fichier `swagger.yaml`.
 
-### Pour voir la documentation :
-
-```bash
-http://localhost:3000/api-docs
-```
-
-### Exemple d'entrée `swagger.yaml` :
+### Exemple :
 
 ```yaml
 /cars:
@@ -126,15 +106,12 @@ http://localhost:3000/api-docs
         description: Succès
 ```
 
-> Le fichier `swagger.yaml` est utilisé pour centraliser la documentation de manière propre et exportable.
-
 ---
 
 ## 📸 Tests API
 
-Les tests peuvent être réalisés avec :
 - Postman (requêtes manuelles CRUD)
-- Swagger (interface de test intégrée avec bouton "Try it out")
+- Swagger (interface intégrée : Try it out)
 
 ---
 
@@ -142,17 +119,29 @@ Les tests peuvent être réalisés avec :
 
 ```
 backend-projet/
+├── prisma/
+│   ├── schema.prisma
+│   └── .gitignore
 ├── src/
-│   ├── routes/         # Définition des endpoints
-│   ├── controllers/    # Logique métier
-│   ├── models/         # (à venir) Modèles Mongoose
-│   ├── middlewares/    # Gestion des erreurs et auth
-│   └── app.js          # Configuration de l’application
-├── swagger.yaml        # Documentation Swagger externe
-├── .env
-├── package.json
+│   ├── routes/
+│   ├── controllers/
+│   ├── models/              # MongoDB uniquement
+│   ├── middlewares/
+│   └── app.js
+├── swagger.yaml
+├── .env.example
+├── docker-compose.yml
 └── README.md
 ```
+
+---
+
+## 🧠 À venir
+
+- Tests automatisés (Jest + Cypress)
+- Authentification JWT
+- Frontend client & admin
+- Déploiement Docker complet
 
 ---
 
