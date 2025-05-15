@@ -147,7 +147,7 @@ backend-projet/
 
 ## 👤 Auteur
 
-Projet réalisé par **[Ton Prénom NOM]**  
+Projet réalisé par **Nathan Maniez**  
 Formation : CDA 2025  
 📅 Année : 2025  
-📍 Centre de formation : *à compléter*
+📍 Centre de formation : *M2i Formation*
