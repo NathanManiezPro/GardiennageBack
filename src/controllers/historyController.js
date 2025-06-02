@@ -23,7 +23,7 @@ module.exports = {
     res.json(history[index]);
   },
 
-  remove: (req, res) => {
+  delete: (req, res) => {
     const index = history.findIndex(h => h.id == req.params.id);
     if (index === -1) return res.status(404).json({ message: 'Historique non trouvé' });
     const removed = history.splice(index, 1);

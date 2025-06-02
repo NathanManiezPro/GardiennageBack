@@ -48,7 +48,7 @@ module.exports = {
     }
   },
 
-  remove: async (req, res) => {
+  delete: async (req, res) => {
     try {
       await prisma.car.delete({
         where: { id: parseInt(req.params.id) }
