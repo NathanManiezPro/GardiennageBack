@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors'); // ✅
 
 const usersRoutes   = require('./routes/users');
 const carsRoutes    = require('./routes/cars');
@@ -11,7 +12,6 @@ const reservationsRoutes  = require('./routes/reservations');
 const notificationsRoutes = require('./routes/notifications');
 const historyRoutes       = require('./routes/history');
 
-// 👉 Swagger setup (à placer après création de app)
 const fs = require('fs');
 const yaml = require('yaml');
 const swaggerUi = require('swagger-ui-express');
@@ -22,7 +22,11 @@ const swaggerDocument = yaml.parse(swaggerFile);
 const app = express();
 const port = process.env.PORT || 3000;
 
-// 1. Parser le JSON
+// 1. Middlewares globaux
+app.use(cors({
+  origin: 'http://localhost:5173', // ✅ autorise uniquement ton frontend React
+  credentials: true                // ✅ autorise les cookies / sessions si besoin
+}));
 app.use(express.json());
 
 // 2. Documentation Swagger
@@ -45,7 +49,7 @@ app.use('/history', historyRoutes);
 
 // 5. Route de base
 app.get('/', (_req, res) => {
-  res.send('Bienvenue sur mon API de gardiennage automobile !');
+  res.json({ message: 'Bienvenue sur mon API de gardiennage automobile !' });
 });
 
 // 6. Middleware de gestion d’erreurs

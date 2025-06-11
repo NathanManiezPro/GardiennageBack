@@ -8,6 +8,7 @@ module.exports = {
       const cars = await prisma.car.findMany();
       res.json(cars);
     } catch (err) {
+      console.error('❌ Erreur Prisma :', err); //
       res.status(500).json({ error: err.message });
     }
   },
