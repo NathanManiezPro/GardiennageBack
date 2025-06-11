@@ -23,7 +23,7 @@ module.exports = {
     res.json({ message: 'Notification marquée comme lue', notif });
   },
 
-  remove: (req, res) => {
+  delete: (req, res) => {
     const index = notifications.findIndex(n => n.id == req.params.id);
     if (index === -1) return res.status(404).json({ message: 'Notification non trouvée' });
     const removed = notifications.splice(index, 1);
