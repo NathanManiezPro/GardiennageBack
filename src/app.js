@@ -28,6 +28,7 @@ app.use(cors({
   credentials: true                // ✅ autorise les cookies / sessions si besoin
 }));
 app.use(express.json());
+app.use('/users', usersRoutes);
 
 // 2. Documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
