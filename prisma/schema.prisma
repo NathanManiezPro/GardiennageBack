@@ -2,45 +2,45 @@ generator client {
   provider = "prisma-client-js"
 }
 
-
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  nom       String
-  email     String   @unique
-  telephone String
-  password  String
-  role      String   @default("client") 
-  cars      Car[]
-  abonnements Abonnement[]
+  id           Int           @id @default(autoincrement())
+  nom          String
+  email        String        @unique
+  telephone    String
+  password     String
+  role         String        @default("client")
+  abonnements  Abonnement[]
+  cars         Car[]
   reservations Reservation[]
 }
 
-
 model Car {
-  id                    Int      @id @default(autoincrement())
+  id                    Int           @id @default(autoincrement())
+  marque                String       
   modele                String
+  annee                 Int           
   plaqueImmatriculation String
   dateEntree            DateTime
   statut                String
   clientId              Int
-  user                  User     @relation(fields: [clientId], references: [id])
-  tickets               Ticket[]
+  user                  User          @relation(fields: [clientId], references: [id])
   reservations          Reservation[]
+  tickets               Ticket[]
 }
 
+
 model Ticket {
-  id         Int      @id @default(autoincrement())
-  type       String
+  id           Int      @id @default(autoincrement())
+  type         String
   dateCreation DateTime
-  statut     String
-  voitureId  Int
-  car        Car      @relation(fields: [voitureId], references: [id])
+  statut       String
+  voitureId    Int
+  car          Car      @relation(fields: [voitureId], references: [id])
 }
 
 model Abonnement {
@@ -57,6 +57,6 @@ model Reservation {
   dateHeure DateTime
   voitureId Int
   clientId  Int
-  car       Car      @relation(fields: [voitureId], references: [id])
   user      User     @relation(fields: [clientId], references: [id])
+  car       Car      @relation(fields: [voitureId], references: [id])
 }
