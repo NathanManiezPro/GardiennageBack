@@ -5,23 +5,39 @@ const jwt = require('jsonwebtoken');
 const prisma = new PrismaClient();
 
 module.exports = {
-  // ➕ Inscription d'un utilisateur
+  // ➕ Inscription d'un utilisateur avec abonnement (facultatif pour admin)
   register: async (req, res) => {
-    const { nom, email, telephone, password, role = 'client' } = req.body;
+    const { nom, email, telephone, password, role = 'client', typeAbonnement } = req.body;
 
     try {
-      // Vérifie si l'email existe déjà
       const existingUser = await prisma.user.findUnique({ where: { email } });
       if (existingUser) {
         return res.status(400).json({ message: 'Cet email est déjà utilisé' });
       }
 
-      // Hash le mot de passe
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      // Crée le nouvel utilisateur
+      const userData = {
+        nom,
+        email,
+        telephone,
+        password: hashedPassword,
+        role,
+      };
+
+      if (role === 'client' && typeAbonnement) {
+        userData.abonnements = {
+          create: {
+            type: typeAbonnement,
+            dateDebut: new Date(),
+            dateFin: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+          },
+        };
+      }
+
       const user = await prisma.user.create({
-        data: { nom, email, telephone, password: hashedPassword, role },
+        data: userData,
+        include: { abonnements: true },
       });
 
       res.status(201).json({ message: 'Inscription réussie', user });
@@ -35,20 +51,13 @@ module.exports = {
     const { email, password } = req.body;
 
     try {
-      // Recherche de l'utilisateur
       const user = await prisma.user.findUnique({ where: { email } });
 
-      if (!user) {
-        return res.status(401).json({ message: 'Utilisateur introuvable' });
-      }
+      if (!user) return res.status(401).json({ message: 'Utilisateur introuvable' });
 
-      // Comparaison du mot de passe
       const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        return res.status(401).json({ message: 'Mot de passe incorrect' });
-      }
+      if (!isPasswordValid) return res.status(401).json({ message: 'Mot de passe incorrect' });
 
-      // Génération du token JWT
       const token = jwt.sign(
         { userId: user.id, role: user.role },
         process.env.JWT_SECRET,
@@ -64,33 +73,62 @@ module.exports = {
   // 📋 Récupérer tous les utilisateurs
   getAll: async (_req, res) => {
     try {
-      const users = await prisma.user.findMany();
+      const users = await prisma.user.findMany({
+        include: { abonnements: true },
+      });
       res.json(users);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   },
 
-  // ✏️ Mise à jour utilisateur
+  // ✏️ Mise à jour utilisateur avec gestion de l'abonnement
   update: async (req, res) => {
     const userId = parseInt(req.params.id);
-    const { nom, email, telephone, password, role } = req.body;
+    const { nom, email, telephone, password, role, typeAbonnement } = req.body;
 
     try {
-      const hashedPassword = password
-        ? await bcrypt.hash(password, 10)
-        : undefined;
+      const dataToUpdate = {
+        nom,
+        email,
+        telephone,
+        role,
+      };
+
+      if (password) {
+        dataToUpdate.password = await bcrypt.hash(password, 10);
+      }
 
       const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data: {
-          nom,
-          email,
-          telephone,
-          password: hashedPassword,
-          role,
-        },
+        data: dataToUpdate,
       });
+
+      // 🔁 Abonnement : mise à jour ou création si nécessaire
+      if (role === 'client' && typeAbonnement) {
+        const existingAbonnement = await prisma.abonnement.findFirst({
+          where: { clientId: userId },
+        });
+
+        if (existingAbonnement) {
+          await prisma.abonnement.update({
+            where: { id: existingAbonnement.id },
+            data: {
+              type: typeAbonnement,
+              dateFin: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+            },
+          });
+        } else {
+          await prisma.abonnement.create({
+            data: {
+              type: typeAbonnement,
+              clientId: userId,
+              dateDebut: new Date(),
+              dateFin: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+            },
+          });
+        }
+      }
 
       res.json({ message: 'Utilisateur mis à jour', user: updatedUser });
     } catch (err) {
@@ -106,6 +144,22 @@ module.exports = {
       res.json({ message: 'Utilisateur supprimé' });
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  },
+
+  // 🚗 Récupérer les voitures d’un utilisateur
+  getUserCars: async (req, res) => {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) return res.status(400).json({ error: 'ID invalide' });
+
+    try {
+      const cars = await prisma.car.findMany({
+        where: { clientId: userId },
+      });
+      res.json(cars);
+    } catch (err) {
+      console.error('❌ Erreur récupération voitures client :', err);
+      res.status(500).json({ error: 'Erreur serveur', details: err.message });
     }
   },
 };

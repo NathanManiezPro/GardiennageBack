@@ -17,6 +17,7 @@ model User {
   abonnements  Abonnement[]
   cars         Car[]
   reservations Reservation[]
+  tickets Ticket[]
 }
 
 model Car {
@@ -37,11 +38,15 @@ model Car {
 model Ticket {
   id           Int      @id @default(autoincrement())
   type         String
-  dateCreation DateTime
-  statut       String
+  message      String
+  dateCreation DateTime @default(now())
+  statut       String   @default("En attente")
   voitureId    Int
+  clientId     Int
   car          Car      @relation(fields: [voitureId], references: [id])
+  user         User     @relation(fields: [clientId], references: [id])
 }
+
 
 model Abonnement {
   id        Int      @id @default(autoincrement())
