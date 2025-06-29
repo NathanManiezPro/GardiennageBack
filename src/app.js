@@ -27,26 +27,34 @@ app.use(cors({
   origin: 'http://localhost:5173', // ✅ autorise uniquement ton frontend React
   credentials: true                // ✅ autorise les cookies / sessions si besoin
 }));
-app.use(express.json());
-app.use('/users', usersRoutes);
+app.use(express.json());  // Nécessaire pour analyser le JSON dans les requêtes
 
-// 2. Documentation Swagger
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-
-// 3. Connexion à MongoDB
-mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('✔️  Connecté à MongoDB'))
-  .catch(err => console.error('❌  Erreur de connexion MongoDB', err));
-
-// 4. Déclaration des routes
-app.use('/users', usersRoutes);
+// 2. Routes publiques
+app.use('/users', usersRoutes);  // On garde cette route une seule fois
 app.use('/cars', carsRoutes);
 app.use('/tickets', ticketsRoutes);
 app.use('/subscriptions', subscriptionsRoutes);
 app.use('/reservations', reservationsRoutes);
 app.use('/notifications', notificationsRoutes);
 app.use('/history', historyRoutes);
+
+// 3. Documentation Swagger
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// 4. Connexion à MongoDB
+const connectToDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, { 
+      useNewUrlParser: true, 
+      useUnifiedTopology: true,
+    });
+    console.log('✔️  Connecté à MongoDB');
+  } catch (err) {
+    console.error('❌  Erreur de connexion MongoDB', err);
+    process.exit(1); // Arrêter l'application si la connexion échoue
+  }
+};
+connectToDB();
 
 // 5. Route de base
 app.get('/', (_req, res) => {
