@@ -1,17 +1,13 @@
+// controllers/ticketsController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// 🔁 Get all tickets with user + car info
+// 🔁 Get all tickets avec user + car info
 const getAll = async (_req, res) => {
   try {
     const tickets = await prisma.ticket.findMany({
-      include: {
-        user: true,
-        car: true,
-      },
-      orderBy: {
-        dateCreation: 'desc',
-      },
+      include: { user: true, car: true },
+      orderBy: { dateCreation: 'desc' },
     });
     res.json(tickets);
   } catch (err) {
@@ -19,25 +15,24 @@ const getAll = async (_req, res) => {
   }
 };
 
-// 🔎 Get ticket by ID
+// 🔎 Get ticket by ID avec user + car
 const getById = async (req, res) => {
-  const ticketId = parseInt(req.params.id);
+  const ticketId = parseInt(req.params.id, 10);
+  if (isNaN(ticketId)) return res.status(400).json({ error: 'ID invalide' });
+
   try {
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
-      include: {
-        user: true,
-        car: true,
-      },
+      include: { user: true, car: true },
     });
     if (!ticket) return res.status(404).json({ message: 'Ticket non trouvé' });
     res.json(ticket);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ➕ Create new ticket
+// ➕ Create new ticket + include relations
 const create = async (req, res) => {
   try {
     const { type, message, voitureId, clientId } = req.body;
@@ -46,13 +41,10 @@ const create = async (req, res) => {
       data: {
         type,
         message,
-        voitureId: parseInt(voitureId),
-        clientId: parseInt(clientId),
+        voitureId: parseInt(voitureId, 10),
+        clientId: parseInt(clientId, 10),
       },
-      include: {
-        user: true,
-        car: true,
-      },
+      include: { user: true, car: true },
     });
 
     res.status(201).json(ticket);
@@ -61,18 +53,18 @@ const create = async (req, res) => {
   }
 };
 
-// ✏️ Update ticket (admin)
+// ✏️ Update ticket (admin) + include relations
 const update = async (req, res) => {
-  const ticketId = parseInt(req.params.id);
+  const ticketId = parseInt(req.params.id, 10);
   const { statut, adminResponse } = req.body;
+
+  if (isNaN(ticketId)) return res.status(400).json({ error: 'ID invalide' });
 
   try {
     const updated = await prisma.ticket.update({
       where: { id: ticketId },
-      data: {
-        statut,
-        adminResponse,
-      },
+      data: { statut, adminResponse },
+      include: { user: true, car: true },
     });
     res.json(updated);
   } catch (err) {
@@ -80,21 +72,24 @@ const update = async (req, res) => {
   }
 };
 
-// 💬 Réponse client
+// 💬 Réponse client → route PUT /tickets/:id/client-response
+//    On ne touche plus au statut, on stocke juste `clientResponse`
 const clientRespond = async (req, res) => {
   const ticketId = parseInt(req.params.id, 10);
-  const { clientResponse } = req.body;
+  const { clientResponse } = req.body;  
+
+  if (isNaN(ticketId)) return res.status(400).json({ error: 'ID invalide' });
+  if (typeof clientResponse !== 'string') {
+    return res.status(400).json({ error: 'clientResponse manquant' });
+  }
 
   try {
-    const updatedTicket = await prisma.ticket.update({
+    const updated = await prisma.ticket.update({
       where: { id: ticketId },
-      data: {
-        clientResponse,
-        statut: 'Réponse client',
-      },
+      data: { clientResponse },
+      include: { user: true, car: true },
     });
-
-    res.json(updatedTicket);
+    res.json(updated);
   } catch (err) {
     res.status(400).json({ error: "Erreur lors de la réponse du client." });
   }
@@ -102,7 +97,9 @@ const clientRespond = async (req, res) => {
 
 // ❌ Delete ticket
 const deleteTicket = async (req, res) => {
-  const ticketId = parseInt(req.params.id);
+  const ticketId = parseInt(req.params.id, 10);
+  if (isNaN(ticketId)) return res.status(400).json({ error: 'ID invalide' });
+
   try {
     await prisma.ticket.delete({ where: { id: ticketId } });
     res.json({ message: 'Ticket supprimé' });
