@@ -1,15 +1,16 @@
 // src/controllers/usersController.js
-const { PrismaClient }   = require('@prisma/client');
-const bcrypt             = require('bcrypt');
-const jwt                = require('jsonwebtoken');
-const PASSWORD_REGEX     = require('../middlewares/passwordRegex');
+const { PrismaClient } = require('@prisma/client');
+const bcrypt           = require('bcrypt');
+const jwt              = require('jsonwebtoken');
+const PASSWORD_REGEX   = require('../middlewares/passwordRegex');
 
 const prisma = new PrismaClient();
 
 module.exports = {
   // ➕ Inscription
   register: async (req, res) => {
-    const { nom, email, telephone, password, role = 'client', typeAbonnement } = req.body;
+    const { nom, email, telephone, password, role = 'client' } = req.body;
+
     try {
       // 1) Validation du format du mot de passe
       if (!PASSWORD_REGEX.test(password)) {
@@ -27,26 +28,12 @@ module.exports = {
 
       // 3) Hash du mot de passe et création de l’utilisateur
       const hashedPassword = await bcrypt.hash(password, 10);
-      const userData = { nom, email, telephone, password: hashedPassword, role };
-
-      if (role === 'client' && typeAbonnement) {
-        userData.abonnements = {
-          create: {
-            type:      typeAbonnement,
-            dateDebut: new Date(),
-            dateFin:   new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-          },
-        };
-      }
-
       const user = await prisma.user.create({
-        data:    userData,
-        include: { abonnements: true },
+        data: { nom, email, telephone, password: hashedPassword, role },
       });
 
       return res.status(201).json({ message: 'Inscription réussie.', user });
     } catch (err) {
-      // Pour toute autre erreur, on renvoie aussi "message"
       return res.status(500).json({ message: err.message });
     }
   },
@@ -54,6 +41,7 @@ module.exports = {
   // 🔐 Connexion
   login: async (req, res) => {
     const { email, password } = req.body;
+
     try {
       const user = await prisma.user.findUnique({ where: { email } });
       if (!user) {
@@ -80,17 +68,22 @@ module.exports = {
   // 📋 Récupérer tous les utilisateurs (admin)
   getAll: async (_req, res) => {
     try {
-      const users = await prisma.user.findMany({ include: { abonnements: true } });
+      const users = await prisma.user.findMany();
       return res.json(users);
     } catch (err) {
       return res.status(500).json({ message: err.message });
     }
   },
 
-  // ✏️ Mettre à jour un utilisateur (admin ou self via PUT /:id)
+  // ✏️ Mettre à jour un utilisateur (admin ou self)
   update: async (req, res) => {
-    const userId = parseInt(req.params.id);
-    const { nom, email, telephone, password, role, typeAbonnement } = req.body;
+    const userId = parseInt(req.params.id, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: 'ID invalide.' });
+    }
+
+    const { nom, email, telephone, password, role } = req.body;
+
     try {
       const dataToUpdate = { nom, email, telephone, role };
       if (password) {
@@ -99,31 +92,8 @@ module.exports = {
 
       const updatedUser = await prisma.user.update({
         where: { id: userId },
-        data:  dataToUpdate,
+        data: dataToUpdate,
       });
-
-      // gestion de l’abonnement
-      if (role === 'client' && typeAbonnement) {
-        const existingSub = await prisma.abonnement.findFirst({ where: { clientId: userId } });
-        if (existingSub) {
-          await prisma.abonnement.update({
-            where: { id: existingSub.id },
-            data: {
-              type:    typeAbonnement,
-              dateFin: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-            },
-          });
-        } else {
-          await prisma.abonnement.create({
-            data: {
-              type:      typeAbonnement,
-              clientId:  userId,
-              dateDebut: new Date(),
-              dateFin:   new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
-            },
-          });
-        }
-      }
 
       return res.json({ message: 'Utilisateur mis à jour.', user: updatedUser });
     } catch (err) {
@@ -133,7 +103,7 @@ module.exports = {
 
   // 🗑️ Supprimer un utilisateur (admin)
   delete: async (req, res) => {
-    const userId = parseInt(req.params.id);
+    const userId = parseInt(req.params.id, 10);
     try {
       await prisma.user.delete({ where: { id: userId } });
       return res.json({ message: 'Utilisateur supprimé.' });
@@ -151,8 +121,6 @@ module.exports = {
       if (!currentPassword || !newPassword) {
         return res.status(400).json({ message: 'Ancien et nouveau mot de passe requis.' });
       }
-
-      // Validation du format du nouveau mot de passe
       if (!PASSWORD_REGEX.test(newPassword)) {
         return res.status(400).json({
           message:
@@ -175,20 +143,21 @@ module.exports = {
 
       return res.json({ message: 'Mot de passe mis à jour avec succès.' });
     } catch (err) {
-      console.error('❌ changePassword:', err);
       return res.status(500).json({ message: 'Erreur serveur.' });
     }
   },
 
   // 📦 Récupérer les voitures d’un utilisateur
   getUserCars: async (req, res) => {
-    const userId = parseInt(req.params.id);
-    if (isNaN(userId)) return res.status(400).json({ message: 'ID invalide.' });
+    const userId = parseInt(req.params.id, 10);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: 'ID invalide.' });
+    }
+
     try {
       const cars = await prisma.car.findMany({ where: { clientId: userId } });
       return res.json(cars);
     } catch (err) {
-      console.error('❌ getUserCars:', err);
       return res.status(500).json({ message: 'Erreur serveur.' });
     }
   },
