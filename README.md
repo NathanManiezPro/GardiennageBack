@@ -1,153 +1,147 @@
 # 🚗 API Gardiennage Automobile
 
-Application développée dans le cadre du titre professionnel **CDA 2025** (Concepteur Développeur d’Applications), permettant de gérer des voitures en gardiennage, des tickets de maintenance, des abonnements et plus encore.
+Application backend développée dans le cadre du **Titre Professionnel CDA 2025** (Concepteur Développeur d’Applications).  
+Elle permet la gestion sécurisée de véhicules en gardiennage, des tickets de maintenance, des réservations et des abonnements.
 
 ---
 
 ## ✅ Objectifs pédagogiques
 
-Cette application permet de valider les blocs de compétences suivants :
+Ce projet permet de valider plusieurs blocs de compétences du référentiel CDA :
 
-- ✅ Développer une application sécurisée
-- ✅ Concevoir et développer une application sécurisée organisée en couches
-- ✅ Préparer le déploiement d’une application sécurisée
-- ✅ Implémenter la persistance des données (MongoDB + PostgreSQL)
-- ✅ Documenter une API REST (Swagger)
-
----
-
-## ⚙️ Technologies utilisées
-
-| Frontend  | Backend       | BDD SQL        | BDD NoSQL     | Auth / Tests      |
-|-----------|----------------|----------------|----------------|--------------------|
-| React.js  | Express.js     | PostgreSQL     | MongoDB        | Swagger / Cypress  |
-| JSX       | Node.js        | Prisma ORM     | Mongoose       | (à venir)          |
-| Tailwind  | Docker         |                |                |                    |
+- 🔒 Sécurisation d’une API (middleware, JWT, hashing des mots de passe)
+- 🧱 Structuration MVC Express.js avec séparation des couches
+- 🧰 Utilisation de deux bases de données : PostgreSQL (SQL) + MongoDB (NoSQL)
+- 🧪 Mise en place de tests automatisés (Jest + couverture)
+- 🚀 Déploiement via Docker & CI/CD (GitHub Actions, SonarQube, GHCR)
+- 📖 Documentation Swagger complète de l’API REST
 
 ---
 
-## 🧰 Dépendances installées
+## ⚙️ Stack technique
 
-```bash
-npm install express mongoose prisma @prisma/client dotenv
-npm install swagger-ui-express yaml
-npm install --save-dev nodemon
-```
+| Frontend         | Backend     | Base SQL       | Base NoSQL   | Sécurité / Outils        |
+|------------------|-------------|----------------|--------------|--------------------------|
+| React + Vite     | Express.js  | PostgreSQL     | MongoDB      | JWT / Swagger / Docker   |
+| Axios / CORS     | Node.js     | Prisma ORM     | Mongoose     | GitHub Actions / Sonar   |
 
 ---
 
 ## 📦 Installation
 
-### 1. Cloner le projet
+### 1. Cloner le repo
 
 ```bash
-git clone https://github.com/tonpseudo/backend-projet.git
+git clone https://github.com/NathanManiezPro/backend-projet.git
 cd backend-projet
 ```
 
 ### 2. Installer les dépendances
 
 ```bash
-npm install
-```
+# Dépendances principales
+npm install express mongoose prisma @prisma/client dotenv bcrypt cors jsonwebtoken swagger-ui-express yaml
 
-### 3. Configurer l’environnement
+# Dépendances de dev
+npm install --save-dev nodemon jest sonar-scanner
 
-Créer un fichier `.env` :
+# Générer le client Prisma
+npx prisma generate
+
+### 3. Fichier `.env` attendu
 
 ```env
 PORT=3000
-MONGO_URI=mongodb://localhost:27017/garage
-DATABASE_URL="postgresql://admin:CarGarage_2025!@localhost:5432/garage?schema=public"
-```
+FRONT_URL=http://localhost:3001
 
-> Un fichier `env.example` est fourni pour t’aider.
+# MongoDB (conteneurisé ou local)
+MONGO_URI=mongodb://admin:CarGarage_2025!@localhost:27017/garage?authSource=admin
+
+# PostgreSQL
+DATABASE_URL=postgresql://admin:CarGarage_2025!@localhost:5432/garage?schema=public
+
+# Authentification
+JWT_SECRET=Gardiennage_Secure_59!
+```
 
 ---
 
-## ⚙️ Scripts disponibles
+## 🔧 Scripts disponibles
 
 ```json
 "scripts": {
   "start": "node src/app.js",
-  "dev": "nodemon src/app.js"
+  "dev": "nodemon src/app.js",
+  "test": "jest --verbose",
+  "coverage": "jest --coverage --coverageProvider=v8",
+  "sonar": "sonar-scanner"
 }
 ```
 
 ---
 
-## ▶️ Lancer le projet
+## ▶️ Lancement avec Docker
 
 ```bash
-docker compose up -d      # Lance PostgreSQL
-npx prisma generate       # Génère le client Prisma
-npm run dev               # Démarre le backend
+docker compose up -d     # Lance les conteneurs PostgreSQL, MongoDB
+docker build -t backend-projet .  # Build l'image Docker backend
+docker run -p 3000:3000 backend-projet  # Lance le conteneur backend
 ```
 
-- [http://localhost:3000](http://localhost:3000)
-- [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+> ⚠️ Ne pas oublier `npx prisma generate` avant le build, ou à inclure dans l'image
 
 ---
 
-## 📘 Documentation Swagger
+## 📊 CI/CD GitHub Actions
 
-L’API est entièrement documentée via un fichier `swagger.yaml`.
+Pipeline automatisé :
+- ✅ Lancement des tests Jest + couverture
+- 📦 Analyse de code avec SonarQube (`SONAR_TOKEN`)
+- 🐳 Build + push de l'image Docker vers GitHub Container Registry (`DOCKER_USERNAME` / `DOCKER_PASSWORD`)
 
-### Exemple :
-
-```yaml
-/cars:
-  get:
-    summary: Liste toutes les voitures
-    tags:
-      - Cars
-    responses:
-      '200':
-        description: Succès
-```
+Workflow : `.github/workflows/ci-backend.yml`
 
 ---
 
-## 📸 Tests API
+## 📘 Swagger
 
-- Postman (requêtes manuelles CRUD)
-- Swagger (interface intégrée : Try it out)
+- URL : [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- Fichier : `swagger.yaml`
 
 ---
 
-## 📂 Structure du projet
+## 🧪 Tests
+
+- Unitaire : `npm run test`
+- Couverture : `npm run coverage`
+- E2E (à venir) : Cypress
+
+---
+
+## 📁 Arborescence
 
 ```
 backend-projet/
 ├── prisma/
-│   ├── schema.prisma
-│   └── .gitignore
+│   └── schema.prisma
 ├── src/
-│   ├── routes/
 │   ├── controllers/
-│   ├── models/              # MongoDB uniquement
+│   ├── routes/
+│   ├── models/
 │   ├── middlewares/
 │   └── app.js
 ├── swagger.yaml
-├── .env.example
+├── Dockerfile
 ├── docker-compose.yml
+├── .env.example
 └── README.md
 ```
 
 ---
 
-## 🧠 À venir
-
-- Tests automatisés (Jest + Cypress)
-- Authentification JWT
-- Frontend client & admin
-- Déploiement Docker complet
-
----
-
-## 👤 Auteur
+## 👨‍💻 Auteur
 
 Projet réalisé par **Nathan Maniez**  
-Formation : CDA 2025  
 📅 Année : 2025  
-📍 Centre de formation : *M2i Formation*
+🎓 CDA - M2i Formation  
+🔗 GitHub : [NathanManiezPro](https://github.com/NathanManiezPro)# Trigger CI
