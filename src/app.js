@@ -10,7 +10,6 @@ const errorHandler  = require('./middlewares/errorHandler');
 const subscriptionsRoutes = require('./routes/subscriptions');
 const reservationsRoutes  = require('./routes/reservations');
 const notificationsRoutes = require('./routes/notifications');
-const historyRoutes       = require('./routes/history');
 
 const fs = require('fs');
 const yaml = require('yaml');
@@ -36,7 +35,7 @@ app.use('/tickets', ticketsRoutes);
 app.use('/subscriptions', subscriptionsRoutes);
 app.use('/reservations', reservationsRoutes);
 app.use('/notifications', notificationsRoutes);
-app.use('/history', historyRoutes);
+
 
 // 3. Documentation Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));

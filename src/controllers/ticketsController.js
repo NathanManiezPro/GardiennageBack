@@ -1,6 +1,7 @@
-// controllers/ticketsController.js
+// src/controllers/ticketsController.js
 const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma            = new PrismaClient();
+const Notification      = require('../models/Notification'); // ton modèle Mongoose
 
 // 🔁 Get all tickets avec user + car info
 const getAll = async (_req, res) => {
@@ -32,20 +33,32 @@ const getById = async (req, res) => {
   }
 };
 
-// ➕ Create new ticket + include relations
+// ➕ Create new ticket + include relations + notif admins
 const create = async (req, res) => {
   try {
     const { type, message, voitureId, clientId } = req.body;
 
+    // création du ticket
     const ticket = await prisma.ticket.create({
       data: {
         type,
         message,
         voitureId: parseInt(voitureId, 10),
-        clientId: parseInt(clientId, 10),
+        clientId:  parseInt(clientId,  10),
       },
       include: { user: true, car: true },
     });
+
+    // envoi d'une notif à tous les admins
+    const admins = await prisma.user.findMany({ where: { role: 'admin' } });
+    await Promise.all(
+      admins.map(a =>
+        Notification.create({
+          clientId: a.id,
+          message:  `🆕 Nouveau ticket #${ticket.id} créé par ${ticket.user.nom}`,
+        })
+      )
+    );
 
     res.status(201).json(ticket);
   } catch (err) {
@@ -53,11 +66,10 @@ const create = async (req, res) => {
   }
 };
 
-// ✏️ Update ticket (admin) + include relations
+// ✏️ Update ticket (admin) + include relations + notif client
 const update = async (req, res) => {
-  const ticketId = parseInt(req.params.id, 10);
+  const ticketId      = parseInt(req.params.id, 10);
   const { statut, adminResponse } = req.body;
-
   if (isNaN(ticketId)) return res.status(400).json({ error: 'ID invalide' });
 
   try {
@@ -66,6 +78,13 @@ const update = async (req, res) => {
       data: { statut, adminResponse },
       include: { user: true, car: true },
     });
+
+    // notifier le client
+    await Notification.create({
+      clientId: updated.user.id,
+      message:  `✅ Votre ticket #${ticketId} a été mis à jour : ${statut}`,
+    });
+
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -73,11 +92,9 @@ const update = async (req, res) => {
 };
 
 // 💬 Réponse client → route PUT /tickets/:id/client-response
-//    On ne touche plus au statut, on stocke juste `clientResponse`
 const clientRespond = async (req, res) => {
-  const ticketId = parseInt(req.params.id, 10);
+  const ticketId      = parseInt(req.params.id, 10);
   const { clientResponse } = req.body;  
-
   if (isNaN(ticketId)) return res.status(400).json({ error: 'ID invalide' });
   if (typeof clientResponse !== 'string') {
     return res.status(400).json({ error: 'clientResponse manquant' });
@@ -89,6 +106,18 @@ const clientRespond = async (req, res) => {
       data: { clientResponse },
       include: { user: true, car: true },
     });
+
+    // notifier les admins qu'une réponse client a été postée
+    const admins = await prisma.user.findMany({ where: { role: 'admin' } });
+    await Promise.all(
+      admins.map(a =>
+        Notification.create({
+          clientId: a.id,
+          message:  `💬 Réponse client sur ticket #${ticketId}`,
+        })
+      )
+    );
+
     res.json(updated);
   } catch (err) {
     res.status(400).json({ error: "Erreur lors de la réponse du client." });

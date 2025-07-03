@@ -1,10 +1,23 @@
-const mongoose = require('mongoose');
+// src/models/Notification.js
+const { Schema, model } = require('mongoose');
 
-const notificationSchema = new mongoose.Schema({
-  message: { type: String, required: true },
-  dateTime: { type: Date, required: true },
-  statutLecture: { type: Boolean, required: true },
-  clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+const notificationSchema = new Schema({
+  clientId: {
+    type: Number,    // On reprend l’ID numérique de ton utilisateur Prisma
+    required: true,
+  },
+  message: {
+    type: String,
+    required: true,
+  },
+  dateEnvoi: {
+    type: Date,
+    default: Date.now,
+  },
+  statutLecture: {
+    type: Boolean,
+    default: false,
+  },
 });
 
-module.exports = mongoose.model('Notification', notificationSchema);
+module.exports = model('Notification', notificationSchema);
