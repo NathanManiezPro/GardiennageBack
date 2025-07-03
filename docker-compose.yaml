@@ -1,6 +1,22 @@
+# backend-projet/docker-compose.yml
 version: "3.9"
 
 services:
+  # === MongoDB pour les notifications ===
+  mongo:
+    image: mongo:6.0
+    container_name: my-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: CarGarage_2025!
+      MONGO_INITDB_DATABASE: garage
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # === PostgreSQL pour Prisma ===
   postgres:
     image: postgres:15
     container_name: my-postgres
@@ -14,5 +30,26 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  # === API backend-projet ===
+  backend-projet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-projet
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - postgres
+    ports:
+      - "3002:3000"
+    environment:
+      # On surcharge MONGO_URI pour qu'il pointe vers le service mongo
+      MONGO_URI: mongodb://admin:CarGarage_2025!@mongo:27017/garage?authSource=admin
+      # (optionnel si tu utilises Prisma dans le back)
+      DATABASE_URL: postgresql://admin:CarGarage_2025!@postgres:5432/garage?schema=public
+
 volumes:
+  mongo_data:
   pgdata:
