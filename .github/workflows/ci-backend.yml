@@ -3,33 +3,38 @@ name: CI Backend
 on:
   push:
     branches:
-      - develop
       - main
+      - master
+  pull_request:
+    branches:
+      - '*'
 
 jobs:
-  build:
+  sonarcloud:
+    name: Analyze with SonarCloud
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
       - name: Install dependencies
         run: npm install
 
-      - name: Run coverage tests
-        run: npm run coverage
+      - name: Run tests
+        run: npm test -- --coverage
 
-      - name: Run SonarQube analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: npm run sonar
-
-      - name: Log in to GitHub Container Registry
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login ghcr.io -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-
-      - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}/backend:latest .
-
-      - name: Push Docker image
-        run: docker push ghcr.io/${{ github.repository }}/backend:latest
+        with:
+          args: >
+            -Dsonar.projectKey=NathanManiezPro_GardiennageBack
+            -Dsonar.organization=nathanmaniezpro
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
