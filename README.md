@@ -144,4 +144,4 @@ backend-projet/
 Projet réalisé par **Nathan Maniez**  
 📅 Année : 2025  
 🎓 CDA - M2i Formation  
-🔗 GitHub : [NathanManiezPro](https://github.com/NathanManiezPro)# Trigger CI
+🔗 GitHub : [NathanManiezPro](https://github.com/NathanManiezPro) pipe
